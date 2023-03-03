@@ -1,0 +1,6 @@
+git push heroku main
+heroku open
+
+npx tsc
+
+test
