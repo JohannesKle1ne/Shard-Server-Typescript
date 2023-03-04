@@ -9,12 +9,23 @@ enum MessageType {
   PlayerPosition,
   PlayerStartPosition,
   BulletPosition,
+  PlayerDestroy,
+  BulletDestroy,
+  Color,
 }
 
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 3000;
 const INDEX = "/index.html";
 
 const stateMapping: StateMapping[] = [];
+
+const colors = ["blue", "green", "yellow"];
+let colorIndex = 0;
+const getColor = () => {
+  colorIndex = (colorIndex + 1) % colors.length;
+  //return colors[colorIndex];
+  return "red";
+};
 
 function getState(client: WebSocket) {
   const mapping = stateMapping.find((m) => m.client === client);
@@ -58,48 +69,41 @@ wss.on("connection", (ws: WebSocket) => {
     //for each websocket client
     const messageString = `${message}`;
     console.log("Received: " + messageString);
-    /* if (isNumeric(messageString)) {
-      const state = getState(ws);
-      if (state) {
-        state.handShake = true;
-      }
-      setTimeout(() => {
-        send(
-          ws,
-          `${JSON.stringify({
-            clientId: parseInt(messageString),
-            ...getRandomStartPosition(),
-            type: MessageType.PlayerStartPosition,
-          })}`
-        );
-      }, 1000);
-    } */
 
     if (isNumeric(messageString)) {
       const state = getState(ws);
       if (state) {
         state.handShake = true;
         state.id = parseInt(messageString);
-      }
-      setTimeout(() => {
-        send(ws, `Welcome`);
-        wss.clients.forEach((client) => {
-          if (client != ws) {
-            const state = getState(client);
-            if (state) {
-              const { x, y } = state.lastPosition;
-              const pos: MatePosition = {
-                clientId: state.id,
-                x,
-                y,
-                type: MessageType.PlayerPosition,
-                sprite: "right",
-              };
-              send(ws, JSON.stringify(pos));
+        state.color = getColor();
+
+        setTimeout(() => {
+          send(
+            ws,
+            JSON.stringify({
+              clientId: state.id,
+              type: MessageType.Color,
+              color: state.color,
+            })
+          );
+          wss.clients.forEach((client) => {
+            if (client != ws) {
+              const state = getState(client);
+              if (state) {
+                const { x, y } = state.lastPosition;
+                const pos: MatePosition = {
+                  clientId: state.id,
+                  x,
+                  y,
+                  type: MessageType.PlayerPosition,
+                  sprite: "right",
+                };
+                send(ws, JSON.stringify(pos));
+              }
             }
-          }
-        });
-      }, 500);
+          });
+        }, 500);
+      }
     }
 
     const type = getMessageType(`${message}`);
@@ -151,18 +155,12 @@ class ClientState {
   handShake: boolean = false;
   lastPosition: Vector = { x: 0, y: 0 };
   id: number = -1;
+  color: string = "blue";
 }
 
 interface StateMapping {
   client: WebSocket;
   state: ClientState;
-}
-
-interface EnemyPosition {
-  x: number;
-  y: number;
-  enemyId: number;
-  type: MessageType;
 }
 
 interface MatePosition {
