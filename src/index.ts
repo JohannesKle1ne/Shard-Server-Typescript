@@ -11,7 +11,7 @@ enum MessageType {
   BulletPosition,
 }
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 const INDEX = "/index.html";
 
 const stateMapping: StateMapping[] = [];
@@ -120,15 +120,14 @@ wss.on("connection", (ws: WebSocket) => {
   });
 });
 
-let index = 0;
+/* let index = 0;
 setInterval(() => {
   wss.clients.forEach((client) => {
     const position = path[index];
-    console.log(position);
     send(client, JSON.stringify(position));
     index = (index + 1) % path.length;
   });
-}, 100);
+}, 100); */
 
 const startPositions = [
   { x: 50, y: 330 },
