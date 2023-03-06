@@ -19,12 +19,11 @@ const INDEX = "/index.html";
 
 const stateMapping: StateMapping[] = [];
 
-const colors = ["blue", "green", "yellow"];
+const colors = ["blue", "green", "red"];
 let colorIndex = 0;
 const getColor = () => {
   colorIndex = (colorIndex + 1) % colors.length;
-  //return colors[colorIndex];
-  return "red";
+  return colors[colorIndex];
 };
 
 function getState(client: WebSocket) {
@@ -96,7 +95,7 @@ wss.on("connection", (ws: WebSocket) => {
                   x,
                   y,
                   type: MessageType.PlayerPosition,
-                  sprite: "right",
+                  sprite: state.lastSprite,
                 };
                 send(ws, JSON.stringify(pos));
               }
@@ -112,6 +111,7 @@ wss.on("connection", (ws: WebSocket) => {
       const state = getState(ws);
       if (state) {
         state.lastPosition = { x: mPos.x, y: mPos.y };
+        state.lastSprite = mPos.sprite;
       }
     }
 
@@ -154,6 +154,7 @@ function isNumeric(str: string) {
 class ClientState {
   handShake: boolean = false;
   lastPosition: Vector = { x: 0, y: 0 };
+  lastSprite: string = "blueright1";
   id: number = -1;
   color: string = "blue";
 }
