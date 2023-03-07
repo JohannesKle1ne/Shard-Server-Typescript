@@ -11,7 +11,9 @@ enum MessageType {
   BulletPosition,
   PlayerDestroy,
   BulletDestroy,
+  BulletCollision,
   Color,
+  BoxPosition,
 }
 
 const PORT = process.env.PORT || 3000;
@@ -59,6 +61,54 @@ const server = express()
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
 const wss: WebSocketServer = new Server({ server });
+
+setInterval(() => {
+  wss.clients.forEach((c) => {
+    const state = getState(c);
+    if (state?.handShake) {
+      send(
+        c,
+        JSON.stringify({
+          type: MessageType.BoxPosition,
+          position: 600,
+          index: 0,
+        })
+      );
+    }
+  });
+}, 6000);
+
+setInterval(() => {
+  wss.clients.forEach((c) => {
+    const state = getState(c);
+    if (state?.handShake) {
+      send(
+        c,
+        JSON.stringify({
+          type: MessageType.BoxPosition,
+          position: 550,
+          index: 1,
+        })
+      );
+    }
+  });
+}, 10000);
+
+setInterval(() => {
+  wss.clients.forEach((c) => {
+    const state = getState(c);
+    if (state?.handShake) {
+      send(
+        c,
+        JSON.stringify({
+          type: MessageType.BoxPosition,
+          position: 420,
+          index: 2,
+        })
+      );
+    }
+  });
+}, 6000);
 
 wss.on("connection", (ws: WebSocket) => {
   console.log("Client connected");
