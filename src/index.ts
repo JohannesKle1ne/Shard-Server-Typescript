@@ -59,7 +59,22 @@ const server = express()
   .use((req: Request, res: Response) =>
     res.sendFile(INDEX, { root: __dirname })
   )
-  .listen(PORT, () => console.log(`Listening on ${PORT}`));
+  .listen(PORT, () => {
+    console.log(`Listening on ${PORT}`);
+    const ws = new WebSocket("ws://localhost:3001");
+
+    // Handle WebSocket connection event
+    ws.on("open", function () {
+      console.log("Connected to WebSocket server");
+
+      let index = 0;
+      setInterval(() => {
+        const position = path[index];
+        ws.send(JSON.stringify(position));
+        index = (index + 1) % path.length;
+      }, 50);
+    });
+  });
 
 const wss: WebSocketServer = new Server({ server });
 

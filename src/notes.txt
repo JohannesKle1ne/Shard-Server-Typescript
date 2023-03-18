@@ -21,3 +21,10 @@ Morgen:
 
 - Physics Fixen (Evtl doch wieder alte version ohne Gravity?)
 - test: asteroid exect nachstellen -> die prallen ja auch ab
+
+
+
+
+
+
+
