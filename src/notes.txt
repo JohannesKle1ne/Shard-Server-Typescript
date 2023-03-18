@@ -4,3 +4,20 @@ heroku open
 npx tsc
 
 test
+
+
+_______________
+
+Engine Contributions:
+
+- Demo Game: 40P
+- Engine Subsystem: Websocket Client, Seriazables (10 P)
+- Engine Subsystem: Websocket Server, Deployment (10 P)
+- Engine Extension: Networkmanager, NetworkedGame, NetworkObject (10P)
+- Engine Extension: Collsion with Directions (10 P)
+- Engine Extension: Display Config on Game Level (5P)
+
+Morgen:
+
+- Physics Fixen (Evtl doch wieder alte version ohne Gravity?)
+- test: asteroid exect nachstellen -> die prallen ja auch ab

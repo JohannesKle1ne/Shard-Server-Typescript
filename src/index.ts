@@ -5,21 +5,18 @@ import { Server, WebSocketServer, WebSocket } from "ws";
 import path from "./testPlayer.json";
 
 enum MessageType {
-  Unknown,
-  PlayerPosition,
-  PlayerStartPosition,
-  BulletPosition,
-  PlayerDestroy,
-  BulletDestroy,
-  BulletCollision,
+  Position,
+  Destroy,
+  DestroyRequest,
   Color,
   BoxPosition,
+  Unknown,
 }
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const INDEX = "/index.html";
 
-const stateMapping: StateMapping[] = [];
+let stateMapping: StateMapping[] = [];
 
 const colors = ["blue", "green", "red"];
 let colorIndex = 0;
@@ -31,6 +28,10 @@ const getColor = () => {
 function getState(client: WebSocket) {
   const mapping = stateMapping.find((m) => m.client === client);
   if (mapping) return mapping.state;
+}
+
+function removeState(client: WebSocket) {
+  stateMapping = stateMapping.filter((m) => m.client !== client);
 }
 
 function send(client: WebSocket, message: string) {
@@ -113,7 +114,23 @@ setInterval(() => {
 wss.on("connection", (ws: WebSocket) => {
   console.log("Client connected");
   stateMapping.push({ client: ws, state: new ClientState() });
-  ws.on("close", () => console.log("Client disconnected"));
+  ws.on("close", () => {
+    console.log("start disconnecting");
+    wss.clients.forEach((client) => {
+      const state = getState(ws);
+      if (state) {
+        console.log(state.objectPositions);
+        state.objectPositions.forEach(({ objectId, clientId }) => {
+          send(
+            client,
+            JSON.stringify({ clientId, type: MessageType.Destroy, objectId })
+          );
+        });
+      }
+    });
+    removeState(ws);
+    console.log("Client disconnected");
+  });
   ws.on("message", (message) => {
     //for each websocket client
     const messageString = `${message}`;
@@ -124,7 +141,7 @@ wss.on("connection", (ws: WebSocket) => {
       if (state) {
         state.handShake = true;
         state.id = parseInt(messageString);
-        state.color = getColor();
+        const newColor = getColor();
 
         setTimeout(() => {
           send(
@@ -132,22 +149,16 @@ wss.on("connection", (ws: WebSocket) => {
             JSON.stringify({
               clientId: state.id,
               type: MessageType.Color,
-              color: state.color,
+              color: newColor,
             })
           );
           wss.clients.forEach((client) => {
             if (client != ws) {
               const state = getState(client);
               if (state) {
-                const { x, y } = state.lastPosition;
-                const pos: MatePosition = {
-                  clientId: state.id,
-                  x,
-                  y,
-                  type: MessageType.PlayerPosition,
-                  sprite: state.lastSprite,
-                };
-                send(ws, JSON.stringify(pos));
+                state.objectPositions.forEach((position) => {
+                  send(ws, JSON.stringify(position));
+                });
               }
             }
           });
@@ -156,12 +167,23 @@ wss.on("connection", (ws: WebSocket) => {
     }
 
     const type = getMessageType(`${message}`);
-    if (type === MessageType.PlayerPosition) {
-      const mPos: MatePosition = JSON.parse(`${message}`);
+    if (type === MessageType.Position) {
+      const mPos: Position = JSON.parse(`${message}`);
       const state = getState(ws);
       if (state) {
-        state.lastPosition = { x: mPos.x, y: mPos.y };
-        state.lastSprite = mPos.sprite;
+        state.objectPositions = state.objectPositions.filter(
+          (p) => p.objectId !== mPos.objectId
+        );
+        state.objectPositions.push(mPos);
+      }
+    }
+    if (type === MessageType.Destroy) {
+      const mPos: Destroy = JSON.parse(`${message}`);
+      const state = getState(ws);
+      if (state) {
+        state.objectPositions = state.objectPositions.filter(
+          (p) => p.objectId !== mPos.objectId
+        );
       }
     }
 
@@ -203,10 +225,8 @@ function isNumeric(str: string) {
 
 class ClientState {
   handShake: boolean = false;
-  lastPosition: Vector = { x: 0, y: 0 };
-  lastSprite: string = "blueright1";
+  objectPositions: Position[] = [];
   id: number = -1;
-  color: string = "blue";
 }
 
 interface StateMapping {
@@ -214,15 +234,25 @@ interface StateMapping {
   state: ClientState;
 }
 
-interface MatePosition {
+interface Position {
   clientId: number;
   x: number;
   y: number;
   type: MessageType;
   sprite: string;
+  objectType: string;
+  objectId: number;
 }
 
-interface Vector {
+interface Destroy {
+  clientId: number;
+  type: MessageType.Destroy;
+  objectId: number;
+}
+
+/* interface ObjectState {
+  objectId: number;
+  sprite: string;
   x: number;
   y: number;
-}
+} */
