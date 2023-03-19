@@ -70,7 +70,7 @@ const server = express()
       let index = 0;
       setInterval(() => {
         const position = path[index];
-        ws.send(JSON.stringify(position));
+        //ws.send(JSON.stringify(position));
         index = (index + 1) % path.length;
       }, 50);
     });
@@ -78,53 +78,36 @@ const server = express()
 
 const wss: WebSocketServer = new Server({ server });
 
-setInterval(() => {
-  wss.clients.forEach((c) => {
-    const state = getState(c);
-    if (state?.handShake) {
-      send(
-        c,
-        JSON.stringify({
-          type: MessageType.BoxPosition,
-          position: 600,
-          index: 0,
-        })
-      );
-    }
-  });
-}, 6000);
+const boxes = [
+  { objectId: 1, x: 0, y: 200 },
+  { objectId: 2, x: 500, y: 500 },
+  { objectId: 3, x: 550, y: 525 },
+  { objectId: 4, x: 600, y: 555 },
+  { objectId: 5, x: 650, y: 575 },
+  { objectId: 6, x: 1150, y: 300 },
+];
 
 setInterval(() => {
   wss.clients.forEach((c) => {
     const state = getState(c);
     if (state?.handShake) {
-      send(
-        c,
-        JSON.stringify({
-          type: MessageType.BoxPosition,
-          position: 550,
-          index: 1,
-        })
-      );
+      boxes.forEach(({ objectId, x, y }) => {
+        send(
+          c,
+          JSON.stringify({
+            clientId: 0,
+            x,
+            y,
+            type: MessageType.Position,
+            sprite: "box",
+            objectType: "JumpAndRun.MovingBox",
+            objectId,
+          })
+        );
+      });
     }
   });
-}, 10000);
-
-setInterval(() => {
-  wss.clients.forEach((c) => {
-    const state = getState(c);
-    if (state?.handShake) {
-      send(
-        c,
-        JSON.stringify({
-          type: MessageType.BoxPosition,
-          position: 420,
-          index: 2,
-        })
-      );
-    }
-  });
-}, 6000);
+}, 8000);
 
 wss.on("connection", (ws: WebSocket) => {
   console.log("Client connected");
