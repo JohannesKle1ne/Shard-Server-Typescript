@@ -61,7 +61,7 @@ const server = express()
   )
   .listen(PORT, () => {
     console.log(`Listening on ${PORT}`);
-    const ws = new WebSocket("ws://localhost:3001");
+    /* const ws = new WebSocket("ws://localhost:3001");
 
     // Handle WebSocket connection event
     ws.on("open", function () {
@@ -73,18 +73,18 @@ const server = express()
         //ws.send(JSON.stringify(position));
         index = (index + 1) % path.length;
       }, 50);
-    });
+    }); */
   });
 
 const wss: WebSocketServer = new Server({ server });
 
 const boxes = [
-  { objectId: 1, x: 0, y: 200 },
+  { objectId: 1, x: 0, y: 100 },
   { objectId: 2, x: 500, y: 500 },
   { objectId: 3, x: 550, y: 525 },
   { objectId: 4, x: 600, y: 555 },
   { objectId: 5, x: 650, y: 575 },
-  { objectId: 6, x: 1150, y: 300 },
+  { objectId: 6, x: 1150, y: 400 },
 ];
 
 setInterval(() => {
@@ -107,7 +107,7 @@ setInterval(() => {
       });
     }
   });
-}, 8000);
+}, 10000);
 
 wss.on("connection", (ws: WebSocket) => {
   console.log("Client connected");
